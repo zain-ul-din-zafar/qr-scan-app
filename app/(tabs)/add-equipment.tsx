@@ -1,23 +1,12 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { StyleSheet, View, Platform, ScrollView, Keyboard } from "react-native";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import QRCodeScanner from "@/components/QRCodeScanner";
 import { Button, Text, Modal, Card, Input } from "@ui-kitten/components";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from "react-native-toast-message";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useFocusEffect } from "expo-router";
-
-// Function to retrieve the stored equipment name from AsyncStorage
-const getStoredEquipmentName = async (id: string) => {
-  try {
-    const existingData = await AsyncStorage.getItem("equipmentData");
-    const parsedData = existingData ? JSON.parse(existingData) : {};
-    return parsedData[id] || "";
-  } catch (error) {
-    console.error(error);
-    return "";
-  }
-};
+import useEquipments from "@/hooks/useEquipments";
+import useKeyboardSize from "@/hooks/useKeyboardSize";
 
 export default function AddEquipment() {
   const [data, setData] = useState<string>("");
@@ -25,44 +14,26 @@ export default function AddEquipment() {
   const [equipmentName, setEquipmentName] = useState<string>("");
   const [error, setError] = useState<string>("");
 
-  const [keyboardSize, setKeyboardSize] = React.useState(0);
+  const { equipments, addEquipment, deleteEquipment, loadEquipments } =
+    useEquipments();
 
-  useEffect(() => {
-    Keyboard.addListener("keyboardDidShow", (e) => {
-      setKeyboardSize(e.endCoordinates.height);
-    });
+  const keyboardSize = useKeyboardSize();
 
-    Keyboard.addListener("keyboardDidHide", (e) => {
-      setKeyboardSize(e.endCoordinates.height);
-    });
-
-    return () => {
-      Keyboard.removeAllListeners("keyboardDidShow");
-      Keyboard.removeAllListeners("keyboardDidHide");
-    };
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (data) {
-        const storedName = await getStoredEquipmentName(data);
-        setEquipmentName(storedName);
-      }
-    };
-    fetchData();
-  }, [data]);
+  useEffect(() => setEquipmentName(equipments[data] || ""), [equipments, data]);
 
   const saveData = async () => {
     if (equipmentName.trim() === "") {
       setError("Equipment name is required");
       return;
     }
+    // check if duplicate item name
+    if (Object.values(equipments).includes(equipmentName.trim())) {
+      setError("Equipment Name Already Taken.");
+      return;
+    }
 
     try {
-      const existingData = await AsyncStorage.getItem("equipmentData");
-      const parsedData = existingData ? JSON.parse(existingData) : {};
-      parsedData[data] = equipmentName;
-      await AsyncStorage.setItem("equipmentData", JSON.stringify(parsedData));
+      await addEquipment(data, equipmentName.trim());
       setData("");
       setEquipmentName("");
       setVisible(false);

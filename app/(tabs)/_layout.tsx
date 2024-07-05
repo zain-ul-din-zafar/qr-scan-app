@@ -3,7 +3,7 @@ import React from "react";
 
 import { TabBarIcon } from "@/components/navigation/TabBarIcon";
 import { Colors } from "@/constants/Colors";
-import { StatusBar, StyleSheet, View } from "react-native";
+import { StatusBar, Image, StyleSheet, View } from "react-native";
 import { Button, Text } from "@ui-kitten/components";
 
 export default function TabLayout() {
@@ -12,7 +12,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.light.tint,
+        tabBarActiveTintColor: "rgb(51, 102, 255)",
         headerShown: true,
         tabBarStyle: {
           height: 60,
@@ -35,7 +35,15 @@ export default function TabLayout() {
           ),
           header: () => (
             <View style={[style.safeArea, style.header]}>
-              <Text category="h3">ODsys</Text>
+              <Image
+                source={require("@/assets/images/colored logo.png")}
+                style={{
+                  width: 120,
+                  height: 120,
+                  paddingVertical: 0,
+                  objectFit: "scale-down"
+                }}
+              />
               <Button
                 style={{ marginLeft: "auto" }}
                 onPress={() => {
@@ -72,6 +80,20 @@ export default function TabLayout() {
           )
         }}
       />
+      <Tabs.Screen
+        name="reading"
+        options={{
+          href: null,
+          headerShown: false
+        }}
+      />
+      <Tabs.Screen
+        name="readings"
+        options={{
+          href: null,
+          headerShown: false
+        }}
+      />
     </Tabs>
   );
 }
@@ -82,10 +104,8 @@ const style = StyleSheet.create({
     backgroundColor: "white"
   },
   header: {
-    padding: 8,
-    paddingVertical: 12,
+    paddingHorizontal: 8,
     flexDirection: "row",
-    alignItems: "center",
-    gap: 6
+    alignItems: "center"
   }
 });

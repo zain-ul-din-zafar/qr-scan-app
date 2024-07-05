@@ -7,8 +7,9 @@ import { MachinesProvider } from "@/hooks/useMachines";
 
 import * as eva from "@eva-design/eva";
 import { ApplicationProvider } from "@ui-kitten/components";
+import { EquipmentsProvider } from "@/hooks/useEquipments";
+import { ReadingsProvider } from "@/hooks/useReadings";
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -28,12 +29,16 @@ export default function RootLayout() {
 
   return (
     <ApplicationProvider {...eva} theme={eva.light}>
-      <MachinesProvider>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-      </MachinesProvider>
+      <EquipmentsProvider>
+        <ReadingsProvider>
+          <MachinesProvider>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+          </MachinesProvider>
+        </ReadingsProvider>
+      </EquipmentsProvider>
     </ApplicationProvider>
   );
 }
