@@ -1,18 +1,26 @@
-import { Tabs } from "expo-router";
+import { Tabs, useNavigation } from "expo-router";
 import React from "react";
 
 import { TabBarIcon } from "@/components/navigation/TabBarIcon";
 import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { StatusBar, StyleSheet, View } from "react-native";
+import { Button, Text } from "@ui-kitten/components";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const navigation = useNavigation();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
-        headerShown: false,
+        tabBarActiveTintColor: Colors.light.tint,
+        headerShown: true,
+        tabBarStyle: {
+          height: 60,
+          paddingBottom: 6
+        },
+        tabBarLabelStyle: {
+          marginBottom: 2
+        }
       }}
     >
       <Tabs.Screen
@@ -25,18 +33,31 @@ export default function TabLayout() {
               color={color}
             />
           ),
+          header: () => (
+            <View style={[style.safeArea, style.header]}>
+              <Text category="h3">ODsys</Text>
+              <Button
+                style={{ marginLeft: "auto" }}
+                onPress={() => {
+                  navigation.navigate("add-equipment" as never);
+                }}
+              >
+                Add Equipment
+              </Button>
+            </View>
+          )
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="add-equipment"
         options={{
-          title: "Explore",
+          title: "Add Equipments",
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon
-              name={focused ? "code-slash" : "code-slash-outline"}
+              name={focused ? "add-sharp" : "add-outline"}
               color={color}
             />
-          ),
+          )
         }}
       />
       <Tabs.Screen
@@ -48,9 +69,23 @@ export default function TabLayout() {
               name={focused ? "qr-code" : "qr-code-outline"}
               color={color}
             />
-          ),
+          )
         }}
       />
     </Tabs>
   );
 }
+
+const style = StyleSheet.create({
+  safeArea: {
+    paddingTop: StatusBar.currentHeight,
+    backgroundColor: "white"
+  },
+  header: {
+    padding: 8,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6
+  }
+});
