@@ -1,23 +1,46 @@
 import React, { useState } from "react";
-import { View, StyleSheet, StatusBar, Image } from "react-native";
-import { Text, Button, Input, Modal, Card } from "@ui-kitten/components";
+import {
+  View,
+  StyleSheet,
+  StatusBar,
+  Image,
+  Text as RNText
+} from "react-native";
+import {
+  Text,
+  Button,
+  Modal,
+  Card,
+  Input,
+  Radio,
+  RadioGroup
+} from "@ui-kitten/components";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import Toast from "react-native-toast-message";
+import Slider from "@react-native-community/slider";
 import useReadings from "@/hooks/useReadings";
 import useEquipments from "@/hooks/useEquipments";
+import { useComposeEquipments } from "@/hooks/useComposeEquipments";
+
+type OilPressureStatus = "Low" | "Good";
 
 export default function ReadingScreen() {
   const { id } = useLocalSearchParams() as any as { id: string };
   const { addReading } = useReadings();
-  const { equipments } = useEquipments();
   const router = useRouter();
+  const allEquipments = useComposeEquipments();
+  const currEquipment = Object.values(allEquipments)
+    .flat(1)
+    .filter((v) => v.id == id)[0];
 
-  const [inletPressure, setInletPressure] = useState<string>("");
-  const [outletPressure, setOutletPressure] = useState<string>("");
+  const [inletPressure, setInletPressure] = useState<number>(1);
+  const [outletPressure, setOutletPressure] = useState<number>(1);
   const [diffPressureIndication, setDiffPressureIndication] =
     useState<string>("");
   const [oilLevelImage, setOilLevelImage] = useState<string | null>(null);
+  const [oilPressureStatus, setOilPressureStatus] =
+    useState<OilPressureStatus>("Good");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const validate = () => {
@@ -44,11 +67,12 @@ export default function ReadingScreen() {
 
     const reading = {
       uid: id,
-      inletPressure: parseFloat(inletPressure),
-      outletPressure: parseFloat(outletPressure),
+      inletPressure,
+      outletPressure,
       created_at: new Date(), // Automatically add current date and time
       diffPressureIndication: parseFloat(diffPressureIndication),
-      oilLevel: oilLevelImage!
+      oilLevel: oilLevelImage!,
+      oilPressureStatus
     };
 
     await addReading(reading);
@@ -58,7 +82,7 @@ export default function ReadingScreen() {
       text2: "Data has been recorded successfully."
     });
 
-    router.push(`/readings?id=${id}&name=${equipments[id]}`);
+    // router.push(`/readings?id=${id}&name=${currEquipment.name}`);
   };
 
   const pickImage = async () => {
@@ -77,33 +101,48 @@ export default function ReadingScreen() {
   return (
     <View style={styles.container}>
       <Text category="h3">Take Reading</Text>
-      <Text>ID: {id}</Text>
+      <Text style={{ marginTop: 8 }}>ID: {id}</Text>
+      <Text style={{ marginTop: 4, marginBottom: 16 }}>
+        Name: {currEquipment.name}
+      </Text>
+
+      <View style={styles.sliderContainer}>
+        <Text category="label">Inlet Pressure: {inletPressure}</Text>
+        <Slider
+          style={styles.slider}
+          minimumValue={1}
+          maximumValue={20}
+          step={1}
+          value={inletPressure}
+          onValueChange={setInletPressure}
+          minimumTrackTintColor="#1EB1FC"
+          maximumTrackTintColor="#d3d3d3"
+        />
+        {errors.inletPressure && (
+          <Text status="danger">{errors.inletPressure}</Text>
+        )}
+      </View>
+
+      <View style={styles.sliderContainer}>
+        <Text category="label">Outlet Pressure: {outletPressure}</Text>
+        <Slider
+          style={styles.slider}
+          minimumValue={1}
+          maximumValue={20}
+          step={1}
+          value={outletPressure}
+          onValueChange={setOutletPressure}
+          minimumTrackTintColor="#1EB1FC"
+          maximumTrackTintColor="#d3d3d3"
+        />
+        {errors.outletPressure && (
+          <Text status="danger">{errors.outletPressure}</Text>
+        )}
+      </View>
 
       <Input
-        label="Inlet Pressure"
-        placeholder="Enter inlet pressure"
-        keyboardType="numeric"
-        value={inletPressure}
-        onChangeText={setInletPressure}
-        status={errors.inletPressure ? "danger" : "basic"}
-        caption={errors.inletPressure}
-        style={styles.input}
-      />
-
-      <Input
-        label="Outlet Pressure"
-        placeholder="Enter outlet pressure"
-        keyboardType="numeric"
-        value={outletPressure}
-        onChangeText={setOutletPressure}
-        status={errors.outletPressure ? "danger" : "basic"}
-        caption={errors.outletPressure}
-        style={styles.input}
-      />
-
-      <Input
-        label="Diff Pressure Indication"
-        placeholder="Enter diff pressure indication"
+        label="Diff Pressure Indication - %"
+        placeholder="Enter diff pressure indication in %"
         keyboardType="numeric"
         value={diffPressureIndication}
         onChangeText={setDiffPressureIndication}
@@ -111,6 +150,23 @@ export default function ReadingScreen() {
         caption={errors.diffPressureIndication}
         style={styles.input}
       />
+
+      <Text
+        category="label"
+        style={{
+          marginBottom: 12
+        }}
+      >
+        Oil Pressure Status
+      </Text>
+      <RadioGroup
+        selectedIndex={oilPressureStatus === "Good" ? 1 : 0}
+        onChange={(index) => setOilPressureStatus(index === 1 ? "Good" : "Low")}
+        style={styles.radioGroup}
+      >
+        <Radio>Low</Radio>
+        <Radio>Good</Radio>
+      </RadioGroup>
 
       <Button onPress={pickImage} style={styles.button}>
         Take Picture of Oil Level
@@ -138,7 +194,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "white"
   },
+  sliderContainer: {
+    marginBottom: 16
+  },
+  slider: {
+    width: "100%",
+    height: 40
+  },
   input: {
+    marginBottom: 16
+  },
+  radioGroup: {
+    flexDirection: "row",
     marginBottom: 16
   },
   button: {

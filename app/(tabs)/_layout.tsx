@@ -2,9 +2,8 @@ import { Tabs, useNavigation } from "expo-router";
 import React from "react";
 
 import { TabBarIcon } from "@/components/navigation/TabBarIcon";
-import { Colors } from "@/constants/Colors";
 import { StatusBar, Image, StyleSheet, View } from "react-native";
-import { Button, Text } from "@ui-kitten/components";
+import { Button } from "@ui-kitten/components";
 
 export default function TabLayout() {
   const navigation = useNavigation();
@@ -47,24 +46,12 @@ export default function TabLayout() {
               <Button
                 style={{ marginLeft: "auto" }}
                 onPress={() => {
-                  navigation.navigate("add-equipment" as never);
+                  navigation.navigate("qrcode" as never);
                 }}
               >
-                Add Equipment
+                Scan Equipments
               </Button>
             </View>
-          )
-        }}
-      />
-      <Tabs.Screen
-        name="add-equipment"
-        options={{
-          title: "Add Equipments",
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon
-              name={focused ? "add-sharp" : "add-outline"}
-              color={color}
-            />
           )
         }}
       />

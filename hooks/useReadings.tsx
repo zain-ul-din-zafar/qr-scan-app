@@ -15,6 +15,7 @@ export interface Reading {
   created_at: Date;
   diffPressureIndication: number;
   oilLevel: string;
+  oilPressureStatus?: "Low" | "Good";
 }
 
 const ReadingsContext = createContext<{

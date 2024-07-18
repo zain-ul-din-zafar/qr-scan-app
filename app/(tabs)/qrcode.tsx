@@ -4,11 +4,11 @@ import QRCodeScanner from "@/components/QRCodeScanner";
 import { ThemedText } from "@/components/ThemedText";
 import { Button, Modal, Card, Text } from "@ui-kitten/components";
 import { useFocusEffect, useNavigation, useRouter } from "expo-router";
-import useEquipments from "@/hooks/useEquipments";
+import { useComposeEquipments } from "@/hooks/useComposeEquipments";
 
 export default function QrCode() {
   const [render, setRender] = useState(false);
-  const { equipments } = useEquipments();
+  const allEquipments = useComposeEquipments();
   const [data, setData] = useState<null | string>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -37,7 +37,10 @@ export default function QrCode() {
           setData(data);
 
           // Check if equipment ID exists
-          const found = Object.keys(equipments).includes(data);
+          const found = Object.values(allEquipments)
+            .flat(1)
+            .some((v) => v.id === data);
+
           if (!found) {
             // Equipment not found, show modal to add equipment
             setModalVisible(true);

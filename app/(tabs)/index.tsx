@@ -1,52 +1,51 @@
 import React from "react";
 import { View, StyleSheet, StatusBar, ScrollView } from "react-native";
 import { Card, Text } from "@ui-kitten/components";
-import useEquipments from "@/hooks/useEquipments";
 import { useRouter } from "expo-router";
+import { useComposeEquipments } from "@/hooks/useComposeEquipments";
 
 export default function HomeScreen() {
-  const { equipments } = useEquipments();
+  const allEquipments = useComposeEquipments();
   const router = useRouter();
 
-  const renderEquipmentCards = () => {
-    return Object.keys(equipments).map((key, index) => {
-      const name = equipments[key];
-      return (
-        <Card
-          key={index}
-          onPress={() => {
-            const params = new URLSearchParams({
-              id: key,
-              name
-            }).toString();
-            router.push(`/readings?${params}`);
+  const groups = Object.keys(allEquipments);
+
+  const renderGroupCards = () => {
+    return groups.map((group, index) => (
+      <Card
+        key={index}
+        onPress={() => router.push(`/readings?id=${group}`)}
+        style={styles.card}
+      >
+        <Text
+          category="h6"
+          style={{
+            textAlign: "center"
           }}
-          style={styles.card}
         >
-          <Text category="h6">{name}</Text>
-          <Text appearance="hint">{`ID: ${key}`}</Text>
-        </Card>
-      );
-    });
+          {group}
+        </Text>
+      </Card>
+    ));
   };
 
   return (
     <View style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
       <Text category="h4" style={styles.title}>
-        Equipments
+        Equipment Groups
       </Text>
 
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-        {Object.keys(equipments).length === 0 && (
+        {groups.length === 0 && (
           <Text
             category="h6"
             style={{ textAlign: "center", marginVertical: "auto" }}
           >
-            No Equipment found.
+            No Groups found.
           </Text>
         )}
-        <View style={styles.cardContainer}>{renderEquipmentCards()}</View>
+        <View style={styles.cardContainer}>{renderGroupCards()}</View>
       </ScrollView>
     </View>
   );
