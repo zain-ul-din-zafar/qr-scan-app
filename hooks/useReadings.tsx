@@ -22,10 +22,12 @@ const ReadingsContext = createContext<{
   readings: Reading[];
   loadReadings: () => Promise<void>;
   addReading: (reading: Reading) => Promise<void>;
+  deleteReading: (uid: string, date: Date) => Promise<void>;
 }>({
   readings: [],
   loadReadings: async () => {},
-  addReading: async () => {}
+  addReading: async () => {},
+  deleteReading: async () => {}
 });
 
 export const ReadingsProvider = ({ children }: { children: ReactNode }) => {
@@ -51,12 +53,26 @@ export const ReadingsProvider = ({ children }: { children: ReactNode }) => {
     setReadings(parsedData);
   }, []);
 
+  const deleteFromStorage = useCallback(async (uid: string, date: Date) => {
+    const existingData = await AsyncStorage.getItem("readings");
+
+    const filterResults = (
+      (existingData ? JSON.parse(existingData) : []) as Reading[]
+    ).filter((v) => {
+      return !(v.uid === uid && v.created_at === date);
+    });
+
+    await AsyncStorage.setItem("readings", JSON.stringify(filterResults));
+    setReadings(filterResults);
+  }, []);
+
   return (
     <ReadingsContext.Provider
       value={{
         readings,
         addReading: addToStorage,
-        loadReadings: loadFromStorage
+        loadReadings: loadFromStorage,
+        deleteReading: deleteFromStorage
       }}
     >
       {children}

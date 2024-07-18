@@ -17,7 +17,7 @@ import * as Print from "expo-print";
 
 export default function ReadingsScreen() {
   const { id } = useLocalSearchParams() as any as { id: string };
-  const { readings } = useReadings();
+  const { readings, deleteReading } = useReadings();
   const allEquipments = useComposeEquipments();
   const groupEquipments = allEquipments[id as keyof typeof allEquipments];
 
@@ -104,10 +104,24 @@ export default function ReadingsScreen() {
                         <tr>
                           <td>${equipment.name}</td>
                           ${
-                            equipmentReadings.length > 0
-                              ? equipmentReadings
-                                  .map(
-                                    (reading) => `
+                            filteredReadings.length > 0
+                              ? filteredReadings
+                                  .map((reading) => {
+                                    const isInFilterReadings =
+                                      equipmentReadings.some(
+                                        (v) =>
+                                          v.created_at === reading.created_at
+                                      );
+
+                                    if (!isInFilterReadings) {
+                                      return `
+                                        <td>
+                                          <p>X</p>
+                                        </td>
+                                      `;
+                                    }
+
+                                    return `
                               <td>
                                 <p>Inlet: ${reading.inletPressure}</p>
                                 <p>Outlet: ${reading.outletPressure}</p>
@@ -118,8 +132,8 @@ export default function ReadingsScreen() {
                                   }
                                 </p>
                               </td>
-                            `
-                                  )
+                            `;
+                                  })
                                   .join("\n")
                               : `<td></td>`
                           }
@@ -132,8 +146,6 @@ export default function ReadingsScreen() {
           </body>
         </html>
       `;
-
-      console.log(" \n", printData);
 
       await Print.printAsync({ html: printData });
       // await Print.printAsync({ html: printData });
@@ -195,33 +207,67 @@ export default function ReadingsScreen() {
                   >
                     {equipment.name}
                   </Text>
-                  {equipmentReadings.length > 0 ? (
-                    equipmentReadings.map((reading) => (
-                      <View
-                        key={reading.created_at.toString()}
-                        style={styles.tableCell}
-                      >
-                        <Text category="s2" style={styles.readingText}>
-                          Inlet: {reading.inletPressure}
-                        </Text>
-                        <Text category="s2" style={styles.readingText}>
-                          Outlet: {reading.outletPressure}
-                        </Text>
-                        <Text category="s2" style={styles.readingText}>
-                          Diff: {reading.diffPressureIndication}
-                        </Text>
-                        <Text category="s2" style={styles.readingText}>
-                          Oil Status: {reading.oilPressureStatus || "N/A"}
-                        </Text>
-                        <Button
-                          onPress={() => handleImageView(reading.oilLevel)}
-                          style={styles.imageButton}
-                          size="tiny"
+                  {filteredReadings.length > 0 ? (
+                    filteredReadings.map((reading) => {
+                      const isInFilterReadings = equipmentReadings.some(
+                        (v) => v.created_at === reading.created_at
+                      );
+
+                      if (!isInFilterReadings) {
+                        return (
+                          <View
+                            key={reading.created_at.toString()}
+                            style={styles.tableCell}
+                          >
+                            <Text>X</Text>
+                          </View>
+                        );
+                      }
+
+                      return (
+                        <View
+                          key={reading.created_at.toString()}
+                          style={styles.tableCell}
                         >
-                          View Image
-                        </Button>
-                      </View>
-                    ))
+                          <Text category="s2" style={styles.readingText}>
+                            Inlet: {reading.inletPressure}
+                          </Text>
+                          <Text category="s2" style={styles.readingText}>
+                            Outlet: {reading.outletPressure}
+                          </Text>
+                          <Text category="s2" style={styles.readingText}>
+                            Diff: {reading.diffPressureIndication}
+                          </Text>
+                          <Text category="s2" style={styles.readingText}>
+                            Oil Status: {reading.oilPressureStatus || "N/A"}
+                          </Text>
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              gap: 2
+                            }}
+                          >
+                            <Button
+                              onPress={() => handleImageView(reading.oilLevel)}
+                              style={[styles.imageButton]}
+                              size="tiny"
+                            >
+                              View Image
+                            </Button>
+                            <Button
+                              size="tiny"
+                              status="danger"
+                              style={styles.imageButton}
+                              onPress={() => {
+                                deleteReading(equipment.id, reading.created_at);
+                              }}
+                            >
+                              Delete
+                            </Button>
+                          </View>
+                        </View>
+                      );
+                    })
                   ) : (
                     <Text category="s2" style={styles.noReadingsText}>
                       No readings
