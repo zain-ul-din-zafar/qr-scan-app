@@ -7,13 +7,16 @@ import {
   Modal,
   ViewComponent
 } from "react-native";
-import { Text, Button, Datepicker } from "@ui-kitten/components";
+import { Text, Button, Datepicker, Spinner } from "@ui-kitten/components";
 import { useLocalSearchParams } from "expo-router";
 import useReadings, { Reading } from "@/hooks/useReadings";
 import { useComposeEquipments } from "@/hooks/useComposeEquipments";
 import moment from "moment";
 import ImageViewer from "react-native-image-zoom-viewer";
 import * as Print from "expo-print";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
+import * as ImageManipulator from "expo-image-manipulator";
 
 export default function ReadingsScreen() {
   const { id } = useLocalSearchParams() as any as { id: string };
@@ -27,6 +30,8 @@ export default function ReadingsScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const tableRef = useRef<any>(null);
+
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const dateStr = moment(selectedDate).format("YYYY-MM-DD");
@@ -48,81 +53,129 @@ export default function ReadingsScreen() {
   };
 
   const handlePrint = async () => {
-    if (tableRef.current) {
-      const printData = `
-        <html>
-          <head>
-            <style>
-              body {
-                width: 100%;
-                height: 100%;
-              }
-              table {
-                width: 100%;
-                border-collapse: collapse;
-              }
-              th, td {
-                border: 1px solid #ccc;
-                padding: 8px;
-                text-align: center;
-              }
-              th {
-                background-color: #f2f2f2;
-              }
-              .head {
-                margin: 1em;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="head">
-              <p>Date: ${selectedDate.toDateString()}</p>
-            </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Machine</th>
-                  ${filteredReadings
-                    .map((reading) => {
-                      return (
-                        "<th>" +
-                        moment(reading.created_at).format("HH:mm") +
-                        "</th>"
-                      );
-                    })
-                    .join("\n")}
-                </tr>
-              </thead>
-              <tbody>
-                    ${groupEquipments
-                      .map((equipment) => {
-                        const equipmentReadings = filteredReadings.filter(
-                          (reading) => reading.uid === equipment.id
-                        );
+    setLoading(true);
+    // Function to convert image URI to base64
+    const convertURIToBase64 = async (filePath: string) => {
+      try {
+        const fileInfo = await FileSystem.getInfoAsync(filePath);
+        if (!fileInfo.exists) {
+          return "";
+        }
+        const result = await ImageManipulator.manipulateAsync(filePath, [], {
+          base64: true
+        });
+        return result.base64 || "";
+      } catch (err) {
+        console.log("Error converting URI to base64 -- ", err);
+        return "";
+      }
+    };
 
-                        return `
-                        <tr>
-                          <td>${equipment.name}</td>
-                          ${
-                            filteredReadings.length > 0
-                              ? filteredReadings
-                                  .map((reading) => {
-                                    const isInFilterReadings =
-                                      equipmentReadings.some(
-                                        (v) =>
-                                          v.created_at === reading.created_at
-                                      );
+    // Collect all base64 images
+    const imagePromises = filteredReadings.map(async (reading) => {
+      if (reading.oilLevel) {
+        const base64Image = await convertURIToBase64(reading.oilLevel);
+        return {
+          created_at: reading.created_at,
+          base64Image,
+          readingId: reading.uid
+        };
+      }
+      return {
+        created_at: reading.created_at,
+        base64Image: "",
+        readingId: reading.uid
+      };
+    });
 
-                                    if (!isInFilterReadings) {
-                                      return `
-                                        <td>
-                                          <p>X</p>
-                                        </td>
-                                      `;
-                                    }
+    // Wait for all base64 images to be processed
+    const imagesWithBase64 = await Promise.all(imagePromises);
 
-                                    return `
+    // Build the HTML for printing
+    const printData = `
+      <html>
+        <head>
+          <style>
+            body {
+              width: 100%;
+              height: 100%;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            th, td {
+              border: 1px solid #ccc;
+              padding: 8px;
+              text-align: center;
+            }
+            th {
+              background-color: #f2f2f2;
+            }
+            .head {
+              margin: 1em;
+            }
+            .image {
+              width: 100px;
+              height: 100px;
+              object-fit: cover;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="head">
+            <p>Date: ${selectedDate.toDateString()}</p>
+            <p>Group: ${id}</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Machine</th>
+                ${filteredReadings
+                  .map(
+                    (reading) =>
+                      `<th>${moment(reading.created_at).format("HH:mm")}</th>`
+                  )
+                  .join("\n")}
+              </tr>
+            </thead>
+            <tbody>
+              ${groupEquipments
+                .map((equipment) => {
+                  const equipmentReadings = filteredReadings.filter(
+                    (reading) => reading.uid === equipment.id
+                  );
+
+                  return `
+                  <tr>
+                    <td>${equipment.name}</td>
+                    ${
+                      filteredReadings.length > 0
+                        ? filteredReadings
+                            .map((reading) => {
+                              const isInFilterReadings = equipmentReadings.some(
+                                (v) => v.created_at === reading.created_at
+                              );
+
+                              if (!isInFilterReadings) {
+                                return `
+                                <td>
+                                  <p>X</p>
+                                </td>
+                              `;
+                              }
+
+                              const image = imagesWithBase64.find(
+                                (img) =>
+                                  img.created_at === reading.created_at &&
+                                  img.readingId === reading.uid
+                              );
+
+                              return `
                               <td>
+                              <p>Status: ${
+                                reading.newOptionStatus || "unknown"
+                              }</p>
                                 <p>Inlet: ${reading.inletPressure}</p>
                                 <p>Outlet: ${reading.outletPressure}</p>
                                 <p>Diff: ${reading.diffPressureIndication}</p>
@@ -131,42 +184,84 @@ export default function ReadingsScreen() {
                                     reading.oilPressureStatus || "N/A"
                                   }
                                 </p>
+                                ${
+                                  image
+                                    ? `<img src="data:image/jpeg;base64,${image.base64Image}" class="image" />`
+                                    : "<img alt='not found'/>"
+                                }
                               </td>
                             `;
-                                  })
-                                  .join("\n")
-                              : `<td></td>`
-                          }
-                        </tr>
-                      `;
-                      })
-                      .join("\n")}
-              </tbody>
-            </table>
-          </body>
-        </html>
-      `;
+                            })
+                            .join("\n")
+                        : `<td></td>`
+                    }
+                  </tr>
+                `;
+                })
+                .join("\n")}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
 
-      await Print.printAsync({ html: printData });
-      // await Print.printAsync({ html: printData });
+    // Print to PDF
+    const res = await Print.printToFileAsync({ html: printData });
+    const pdfName = `${res.uri.slice(
+      0,
+      res.uri.lastIndexOf("/") + 1
+    )}Log-sheet-report-design_${id}(${new Date().toDateString()}).pdf`;
+
+    try {
+      await FileSystem.moveAsync({
+        from: res.uri,
+        to: pdfName
+      });
+
+      if (await FileSystem.getInfoAsync(pdfName)) {
+        await Sharing.shareAsync(pdfName);
+      } else {
+        console.log("Failed to save PDF file");
+      }
+    } catch (error) {
+      console.error("Error saving file:", error);
     }
+
+    setLoading(false);
   };
 
   return (
     <View style={styles.container}>
-      <Text category="h3" style={styles.headerText}>
+      <Text category="h5" style={styles.headerText}>
         Readings for {id}
       </Text>
       <View style={styles.filterContainer}>
-        <Text category="h6" style={styles.dateLabel}>
-          Filter by Date:
-        </Text>
         <Datepicker
           date={selectedDate}
           onSelect={handleDateChange}
           style={styles.datePicker}
         />
-        <Button onPress={handlePrint} style={styles.printButton}>
+        <Button
+          onPress={handlePrint}
+          style={styles.printButton}
+          disabled={loading}
+          status="outline"
+          appearance={loading ? "outline" : "filled"}
+          accessoryLeft={() =>
+            loading ? (
+              <Spinner
+                size="sm"
+                style={{
+                  width: 13,
+                  height: 13
+                }}
+                status="warning"
+              />
+            ) : (
+              <></>
+            )
+          }
+        >
           Print
         </Button>
       </View>
@@ -229,6 +324,9 @@ export default function ReadingsScreen() {
                           key={reading.created_at.toString()}
                           style={styles.tableCell}
                         >
+                          <Text category="s2" style={styles.readingText}>
+                            Status: {reading.newOptionStatus || "unknown"}
+                          </Text>
                           <Text category="s2" style={styles.readingText}>
                             Inlet: {reading.inletPressure}
                           </Text>
@@ -316,7 +414,8 @@ const styles = StyleSheet.create({
   },
   headerText: {
     textAlign: "center",
-    marginBottom: 16
+    marginBottom: 16,
+    marginTop: 8
   },
   filterContainer: {
     flexDirection: "row",
@@ -326,6 +425,9 @@ const styles = StyleSheet.create({
   },
   dateLabel: {
     marginBottom: 8
+  },
+  spinner: {
+    color: "white"
   },
   datePicker: {
     flex: 1,

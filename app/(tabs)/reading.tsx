@@ -4,6 +4,7 @@ import {
   StyleSheet,
   StatusBar,
   Image,
+  ScrollView,
   Text as RNText
 } from "react-native";
 import {
@@ -18,12 +19,12 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import Toast from "react-native-toast-message";
-import Slider from "@react-native-community/slider";
 import useReadings from "@/hooks/useReadings";
 import useEquipments from "@/hooks/useEquipments";
 import { useComposeEquipments } from "@/hooks/useComposeEquipments";
 
 type OilPressureStatus = "Low" | "Good";
+type NewOptionStatus = "on" | "off" | "isolated";
 
 export default function ReadingScreen() {
   const { id } = useLocalSearchParams() as any as { id: string };
@@ -34,13 +35,14 @@ export default function ReadingScreen() {
     .flat(1)
     .filter((v) => v.id == id)[0];
 
-  const [inletPressure, setInletPressure] = useState<number>(1);
-  const [outletPressure, setOutletPressure] = useState<number>(1);
+  const [inletPressure, setInletPressure] = useState<string>("1");
+  const [outletPressure, setOutletPressure] = useState<string>("1");
   const [diffPressureIndication, setDiffPressureIndication] =
     useState<string>("");
   const [oilLevelImage, setOilLevelImage] = useState<string | null>(null);
   const [oilPressureStatus, setOilPressureStatus] =
     useState<OilPressureStatus>("Good");
+  const [newOptionStatus, setNewOptionStatus] = useState<NewOptionStatus>("on");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const validate = () => {
@@ -67,12 +69,13 @@ export default function ReadingScreen() {
 
     const reading = {
       uid: id,
-      inletPressure,
-      outletPressure,
+      inletPressure: parseFloat(inletPressure),
+      outletPressure: parseFloat(outletPressure),
       created_at: new Date(), // Automatically add current date and time
       diffPressureIndication: parseFloat(diffPressureIndication),
       oilLevel: oilLevelImage!,
-      oilPressureStatus
+      oilPressureStatus,
+      newOptionStatus // Include the new option status in the reading
     };
 
     await addReading(reading);
@@ -99,46 +102,66 @@ export default function ReadingScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text category="h3">Take Reading</Text>
       <Text style={{ marginTop: 8 }}>ID: {id}</Text>
       <Text style={{ marginTop: 4, marginBottom: 16 }}>
         Name: {currEquipment.name}
       </Text>
 
-      <View style={styles.sliderContainer}>
-        <Text category="label">Inlet Pressure: {inletPressure}</Text>
-        <Slider
-          style={styles.slider}
-          minimumValue={1}
-          maximumValue={20}
-          step={1}
-          value={inletPressure}
-          onValueChange={setInletPressure}
-          minimumTrackTintColor="#1EB1FC"
-          maximumTrackTintColor="#d3d3d3"
-        />
-        {errors.inletPressure && (
-          <Text status="danger">{errors.inletPressure}</Text>
-        )}
-      </View>
+      <Text
+        category="label"
+        style={{
+          marginBottom: 12
+        }}
+      >
+        Status
+      </Text>
+      <RadioGroup
+        selectedIndex={
+          newOptionStatus === "on" ? 0 : newOptionStatus === "off" ? 1 : 2
+        }
+        onChange={(index) => {
+          switch (index) {
+            case 0:
+              setNewOptionStatus("on");
+              break;
+            case 1:
+              setNewOptionStatus("off");
+              break;
+            case 2:
+              setNewOptionStatus("isolated");
+              break;
+          }
+        }}
+        style={styles.radioGroup}
+      >
+        <Radio>On</Radio>
+        <Radio>Off</Radio>
+        <Radio>Isolated</Radio>
+      </RadioGroup>
 
-      <View style={styles.sliderContainer}>
-        <Text category="label">Outlet Pressure: {outletPressure}</Text>
-        <Slider
-          style={styles.slider}
-          minimumValue={1}
-          maximumValue={20}
-          step={1}
-          value={outletPressure}
-          onValueChange={setOutletPressure}
-          minimumTrackTintColor="#1EB1FC"
-          maximumTrackTintColor="#d3d3d3"
-        />
-        {errors.outletPressure && (
-          <Text status="danger">{errors.outletPressure}</Text>
-        )}
-      </View>
+      <Input
+        label="Inlet Pressure"
+        placeholder="Enter inlet pressure"
+        keyboardType="numeric"
+        value={inletPressure}
+        onChangeText={setInletPressure}
+        status={errors.inletPressure ? "danger" : "basic"}
+        caption={errors.inletPressure}
+        style={styles.input}
+      />
+
+      <Input
+        label="Outlet Pressure"
+        placeholder="Enter outlet pressure"
+        keyboardType="numeric"
+        value={outletPressure}
+        onChangeText={setOutletPressure}
+        status={errors.outletPressure ? "danger" : "basic"}
+        caption={errors.outletPressure}
+        style={styles.input}
+      />
 
       <Input
         label="Diff Pressure Indication - %"
@@ -182,8 +205,14 @@ export default function ReadingScreen() {
         Submit Reading
       </Button>
 
+      <View
+        style={{
+          height: 100
+        }}
+      ></View>
+
       <Toast />
-    </View>
+    </ScrollView>
   );
 }
 
@@ -191,15 +220,7 @@ const styles = StyleSheet.create({
   container: {
     paddingTop: StatusBar.currentHeight,
     padding: 16,
-    flex: 1,
     backgroundColor: "white"
-  },
-  sliderContainer: {
-    marginBottom: 16
-  },
-  slider: {
-    width: "100%",
-    height: 40
   },
   input: {
     marginBottom: 16

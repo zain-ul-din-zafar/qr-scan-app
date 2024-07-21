@@ -3,7 +3,7 @@ import React from "react";
 
 import { TabBarIcon } from "@/components/navigation/TabBarIcon";
 import { StatusBar, Image, StyleSheet, View } from "react-native";
-import { Button } from "@ui-kitten/components";
+import { Text } from "@ui-kitten/components";
 
 export default function TabLayout() {
   const navigation = useNavigation();
@@ -43,14 +43,24 @@ export default function TabLayout() {
                   objectFit: "scale-down"
                 }}
               />
-              <Button
-                style={{ marginLeft: "auto" }}
-                onPress={() => {
-                  navigation.navigate("qrcode" as never);
+              <View
+                style={{
+                  marginLeft: "auto",
+                  padding: 2
                 }}
               >
-                Scan Equipments
-              </Button>
+                <Text category="h6" numberOfLines={1} ellipsizeMode="tail">
+                  Employee Name
+                </Text>
+                <Text
+                  category="s2"
+                  style={{
+                    color: "#666"
+                  }}
+                >
+                  ID: 1000 2000 200 100
+                </Text>
+              </View>
             </View>
           )
         }}
