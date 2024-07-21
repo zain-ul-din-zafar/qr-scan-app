@@ -82,8 +82,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   card: {
-    width: "49%", // Adjust width as per your layout needs
-    marginBottom: 16
+    width: "99%", // Adjust width as per your layout needs
+    marginBottom: 8,
+    padding: 2,
+    paddingVertical: 12
   },
   title: {
     marginBottom: 12,

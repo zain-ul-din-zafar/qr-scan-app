@@ -84,8 +84,7 @@ export default function ReadingScreen() {
       text1: "Success",
       text2: "Data has been recorded successfully."
     });
-
-    // router.push(`/readings?id=${id}&name=${currEquipment.name}`);
+    router.push(`/`);
   };
 
   const pickImage = async () => {
