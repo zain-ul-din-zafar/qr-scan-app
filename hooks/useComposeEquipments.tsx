@@ -1,7 +1,7 @@
 import { createContext, ReactNode, useContext } from "react";
 
 const HARD_CODED_DATA = {
-  "C.O. FORWARDING PUMP M": [
+  "Crude forwarding pump's stage 7": [
     {
       id: "0000 0046 0042",
       name: "5600A"
@@ -67,7 +67,7 @@ const HARD_CODED_DATA = {
       name: "5900D"
     }
   ],
-  "C.O. FORWARDING PUMP STAGE 5 M": [
+  "Crude forwarding pump's stage 5": [
     {
       id: "0000 0046 0785",
       name: "5100A"
@@ -149,7 +149,7 @@ const HARD_CODED_DATA = {
       name: "5500D"
     }
   ],
-  "DIESAL F. PUMP 5": [
+  "Diesel forwarding pump's stage 5": [
     {
       id: "0000 0046 6101",
       name: "6100A"
@@ -191,7 +191,7 @@ const HARD_CODED_DATA = {
       name: "6500B"
     }
   ],
-  "STAGE 7 DIESAL": [
+  "Diesel forwarding pump's stage 7": [
     {
       id: "0000 0046 6601",
       name: "6600A"

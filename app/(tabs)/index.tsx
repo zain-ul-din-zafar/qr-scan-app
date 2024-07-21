@@ -11,22 +11,38 @@ export default function HomeScreen() {
   const groups = Object.keys(allEquipments);
 
   const renderGroupCards = () => {
-    return groups.map((group, index) => (
-      <Card
-        key={index}
-        onPress={() => router.push(`/readings?id=${group}`)}
-        style={styles.card}
-      >
-        <Text
-          category="h6"
-          style={{
-            textAlign: "center"
-          }}
+    return groups.map((group, index) => {
+      const splitText = group.split("forwarding");
+
+      return (
+        <Card
+          key={index}
+          onPress={() => router.push(`/readings?id=${group}`)}
+          style={styles.card}
         >
-          {group}
-        </Text>
-      </Card>
-    ));
+          <Text
+            category="h6"
+            style={{
+              textAlign: "center"
+            }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {splitText[0]} forwarding
+          </Text>
+          <Text
+            category="h6"
+            style={{
+              textAlign: "center"
+            }}
+            ellipsizeMode="tail"
+            numberOfLines={1}
+          >
+            {splitText[1]}
+          </Text>
+        </Card>
+      );
+    });
   };
 
   return (
@@ -70,6 +86,7 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   title: {
-    marginBottom: 12
+    marginBottom: 12,
+    marginLeft: "auto"
   }
 });
