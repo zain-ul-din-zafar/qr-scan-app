@@ -60,7 +60,10 @@ export const ReadingsProvider = ({ children }: { children: ReactNode }) => {
     const filterResults = (
       (existingData ? JSON.parse(existingData) : []) as Reading[]
     ).filter((v) => {
-      return !(v.uid === uid && v.created_at.getTime() === date.getTime());
+      return !(
+        v.uid === uid &&
+        new Date(v.created_at).getTime() === new Date(date).getTime()
+      );
     });
 
     await AsyncStorage.setItem("readings", JSON.stringify(filterResults));

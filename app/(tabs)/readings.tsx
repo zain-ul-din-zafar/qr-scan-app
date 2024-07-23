@@ -352,7 +352,7 @@ export default function ReadingsScreen() {
                             >
                               View Image
                             </Button>
-                            {reading.created_at.toDateString() ===
+                            {new Date(reading.created_at).toDateString() ===
                               new Date().toDateString() && (
                               <Button
                                 size="tiny"
