@@ -352,16 +352,22 @@ export default function ReadingsScreen() {
                             >
                               View Image
                             </Button>
-                            <Button
-                              size="tiny"
-                              status="danger"
-                              style={styles.imageButton}
-                              onPress={() => {
-                                deleteReading(equipment.id, reading.created_at);
-                              }}
-                            >
-                              Delete
-                            </Button>
+                            {reading.created_at.toDateString() ===
+                              new Date().toDateString() && (
+                              <Button
+                                size="tiny"
+                                status="danger"
+                                style={styles.imageButton}
+                                onPress={() => {
+                                  deleteReading(
+                                    equipment.id,
+                                    reading.created_at
+                                  );
+                                }}
+                              >
+                                Delete
+                              </Button>
+                            )}
                           </View>
                         </View>
                       );
