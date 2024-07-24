@@ -17,6 +17,7 @@ import * as Print from "expo-print";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import * as ImageManipulator from "expo-image-manipulator";
+import { cardTemplate, RENDER } from "@/templates";
 
 export default function ReadingsScreen() {
   const { id } = useLocalSearchParams() as any as { id: string };
@@ -91,122 +92,28 @@ export default function ReadingsScreen() {
     // Wait for all base64 images to be processed
     const imagesWithBase64 = await Promise.all(imagePromises);
 
-    // Build the HTML for printing
-    const printData = `
-      <html>
-        <head>
-          <style>
-            body {
-              width: 100%;
-              height: 100%;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-            }
-            th, td {
-              border: 1px solid #ccc;
-              padding: 8px;
-              text-align: center;
-            }
-            th {
-              background-color: #f2f2f2;
-            }
-            .head {
-              margin: 1em;
-            }
-            .image {
-              width: 100px;
-              height: 100px;
-              object-fit: cover;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="head">
-            <p>Date: ${selectedDate.toDateString()}</p>
-            <p>Group: ${id}</p>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Machine</th>
-                ${filteredReadings
-                  .map(
-                    (reading) =>
-                      `<th>${moment(reading.created_at).format("HH:mm")}</th>`
-                  )
-                  .join("\n")}
-              </tr>
-            </thead>
-            <tbody>
-              ${groupEquipments
-                .map((equipment) => {
-                  const equipmentReadings = filteredReadings.filter(
-                    (reading) => reading.uid === equipment.id
-                  );
-
-                  return `
-                  <tr>
-                    <td>${equipment.name}</td>
-                    ${
-                      filteredReadings.length > 0
-                        ? filteredReadings
-                            .map((reading) => {
-                              const isInFilterReadings = equipmentReadings.some(
-                                (v) => v.created_at === reading.created_at
-                              );
-
-                              if (!isInFilterReadings) {
-                                return `
-                                <td>
-                                  <p>X</p>
-                                </td>
-                              `;
-                              }
-
-                              const image = imagesWithBase64.find(
-                                (img) =>
-                                  img.created_at === reading.created_at &&
-                                  img.readingId === reading.uid
-                              );
-
-                              return `
-                              <td>
-                              <p>Status: ${
-                                reading.newOptionStatus || "unknown"
-                              }</p>
-                                <p>Inlet: ${reading.inletPressure}</p>
-                                <p>Outlet: ${reading.outletPressure}</p>
-                                <p>Diff: ${reading.diffPressureIndication}</p>
-                                <p>
-                                  Oil Status: ${
-                                    reading.oilPressureStatus || "N/A"
-                                  }
-                                </p>
-                                ${
-                                  image
-                                    ? `<img src="data:image/jpeg;base64,${image.base64Image}" class="image" />`
-                                    : "<img alt='not found'/>"
-                                }
-                              </td>
-                            `;
-                            })
-                            .join("\n")
-                        : `<td></td>`
-                    }
-                  </tr>
-                `;
-                })
-                .join("\n")}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `;
+    const readingsCard = filteredReadings.map((reading) => {
+      const image = imagesWithBase64.find(
+        (img) =>
+          img.created_at === reading.created_at && img.readingId === reading.uid
+      );
+      const machine = Object.values(allEquipments)
+        .flat(1)
+        .find((i) => i.id === reading.uid);
+      return cardTemplate(
+        reading,
+        image?.base64Image || "",
+        machine?.name || "unknown"
+      );
+    });
+    const html = RENDER(
+      readingsCard.join("\n"),
+      `<p>Date: ${selectedDate.toDateString()}</p>
+            <p>Group: ${id}</p>`
+    );
 
     // Print to PDF
-    const res = await Print.printToFileAsync({ html: printData });
+    const res = await Print.printToFileAsync({ html });
     const pdfName = `${res.uri.slice(
       0,
       res.uri.lastIndexOf("/") + 1
