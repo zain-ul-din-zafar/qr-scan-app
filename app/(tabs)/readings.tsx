@@ -18,6 +18,7 @@ import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import * as ImageManipulator from "expo-image-manipulator";
 import { cardTemplate, RENDER } from "@/templates";
+import { csvToJSON } from "@/lib/json-csv";
 
 export default function ReadingsScreen() {
   const { id } = useLocalSearchParams() as any as { id: string };
@@ -137,6 +138,31 @@ export default function ReadingsScreen() {
     setLoading(false);
   };
 
+  const handleExportCSV = async () => {
+    const textFields = filteredReadings.map(({ oilLevel, ...rest }) => ({
+      ...rest
+    }));
+
+    setLoading(true);
+
+    const csv = csvToJSON(textFields);
+    const uri = `${
+      FileSystem.documentDirectory
+    }Log-sheet-report-design_${id}(${new Date().toDateString()}).csv`;
+
+    await FileSystem.writeAsStringAsync(uri, csv, {
+      encoding: FileSystem.EncodingType.UTF8
+    });
+
+    if (await FileSystem.getInfoAsync(uri)) {
+      await Sharing.shareAsync(uri);
+    } else {
+      console.log("Failed to save CSV file");
+    }
+
+    setLoading(false);
+  };
+
   return (
     <View style={styles.container}>
       <Text category="h5" style={styles.headerText}>
@@ -148,6 +174,9 @@ export default function ReadingsScreen() {
           onSelect={handleDateChange}
           style={styles.datePicker}
         />
+        <Button onPress={handleExportCSV} disabled={loading}>
+          CSV
+        </Button>
         <Button
           onPress={handlePrint}
           style={styles.printButton}
