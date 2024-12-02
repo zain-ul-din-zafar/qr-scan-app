@@ -40,7 +40,8 @@
           "microphonePermission": "Allow qr-code-app to access your microphone",
           "recordAudioAndroid": true
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
