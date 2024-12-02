@@ -44,6 +44,7 @@ export default function ReadingScreen() {
     useState<OilPressureStatus>("Good");
   const [newOptionStatus, setNewOptionStatus] = useState<NewOptionStatus>("on");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [comment, setComment] = useState<string>("");
 
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
@@ -75,7 +76,8 @@ export default function ReadingScreen() {
       diffPressureIndication: parseFloat(diffPressureIndication),
       oilLevel: oilLevelImage!,
       oilPressureStatus,
-      newOptionStatus // Include the new option status in the reading
+      newOptionStatus, // Include the new option status in the reading
+      comment
     };
 
     await addReading(reading);
@@ -189,6 +191,27 @@ export default function ReadingScreen() {
         <Radio>Low</Radio>
         <Radio>Good</Radio>
       </RadioGroup>
+
+      <Text
+        category="label"
+        style={{
+          marginBottom: 12
+        }}
+      >
+        Comments
+      </Text>
+
+      <Input
+        label="Comment"
+        placeholder="Enter your comment"
+        value={comment}
+        onChangeText={setComment}
+        style={styles.input}
+        multiline={true}
+        textStyle={{ minHeight: 64 }}
+      />
+
+      {/* add comment input here */}
 
       <Button onPress={pickImage} style={styles.button}>
         Take Picture of Oil Level

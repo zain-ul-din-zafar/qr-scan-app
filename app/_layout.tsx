@@ -6,9 +6,10 @@ import "react-native-reanimated";
 import { MachinesProvider } from "@/hooks/useMachines";
 
 import * as eva from "@eva-design/eva";
-import { ApplicationProvider } from "@ui-kitten/components";
+import { ApplicationProvider, IconRegistry } from "@ui-kitten/components";
 import { EquipmentsProvider } from "@/hooks/useEquipments";
 import { ReadingsProvider } from "@/hooks/useReadings";
+import { EvaIconsPack } from "@ui-kitten/eva-icons";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,18 +29,21 @@ export default function RootLayout() {
   }
 
   return (
-    <ApplicationProvider {...eva} theme={eva.light}>
-      <EquipmentsProvider>
-        <ReadingsProvider>
-          <MachinesProvider>
-            <Stack>
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-          </MachinesProvider>
-        </ReadingsProvider>
-      </EquipmentsProvider>
-    </ApplicationProvider>
+    <>
+      <IconRegistry icons={EvaIconsPack} />
+      <ApplicationProvider {...eva} theme={eva.light}>
+        <EquipmentsProvider>
+          <ReadingsProvider>
+            <MachinesProvider>
+              <Stack>
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+            </MachinesProvider>
+          </ReadingsProvider>
+        </EquipmentsProvider>
+      </ApplicationProvider>
+    </>
   );
 }

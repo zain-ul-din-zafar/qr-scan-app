@@ -4,9 +4,12 @@ import React from "react";
 import { TabBarIcon } from "@/components/navigation/TabBarIcon";
 import { StatusBar, Image, StyleSheet, View } from "react-native";
 import { Text } from "@ui-kitten/components";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function TabLayout() {
   const navigation = useNavigation();
+
+  const { user } = useAuth();
 
   return (
     <Tabs
@@ -50,7 +53,7 @@ export default function TabLayout() {
                 }}
               >
                 <Text category="h6" numberOfLines={1} ellipsizeMode="tail">
-                  Employee Name
+                  {user?.name}
                 </Text>
                 <Text
                   category="s2"
@@ -58,7 +61,8 @@ export default function TabLayout() {
                     color: "#666"
                   }}
                 >
-                  ID: 1000 2000 200 100
+                  {`Email: ${user?.email}`}
+                  {/* ID: 1000 2000 200 100 */}
                 </Text>
               </View>
             </View>

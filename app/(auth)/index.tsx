@@ -1,6 +1,16 @@
-import React, { useState } from "react";
-import { Input, Text, Button } from "@ui-kitten/components";
-import { View, StyleSheet, StatusBar, Image, Alert } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Input, Text, Button, Icon } from "@ui-kitten/components";
+
+import {
+  View,
+  StyleSheet,
+  StatusBar,
+  Image,
+  Alert,
+  TouchableWithoutFeedback
+} from "react-native";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigation } from "expo-router";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -8,6 +18,8 @@ export default function LoginScreen() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [showSecureText, setShowSecureText] = useState(true);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -34,15 +46,31 @@ export default function LoginScreen() {
     return valid;
   };
 
-  const handleLogin = () => {
+  const renderInputIcon = (props: any): React.ReactElement => (
+    <TouchableWithoutFeedback onPress={() => setShowSecureText((v) => !v)}>
+      <Icon {...props} name={!showSecureText ? "eye" : "eye-off"} />
+    </TouchableWithoutFeedback>
+  );
+
+  const { signIn, user } = useAuth();
+  const navigator = useNavigation();
+
+  useEffect(() => {
+    if (user) {
+      navigator.navigate("(tabs)" as never);
+    }
+  }, [user]);
+
+  const handleLogin = async () => {
     if (validateInputs()) {
       setIsSubmitting(true);
 
-      // Simulate an API call
-      setTimeout(() => {
-        setIsSubmitting(false);
-        Alert.alert("Login successful", `Welcome, ${email}!`);
-      }, 2000);
+      const { success, error } = await signIn(email, password);
+
+      setIsSubmitting(false);
+      if (!success) {
+        alert(error);
+      }
     }
   };
 
@@ -55,7 +83,7 @@ export default function LoginScreen() {
           style={styles.logo}
         />
         <Text category="h5" style={styles.title}>
-          Login Screen
+          Enter email & password to login
         </Text>
 
         <Input
@@ -75,8 +103,9 @@ export default function LoginScreen() {
           onChangeText={setPassword}
           status={passwordError ? "danger" : "basic"}
           caption={passwordError ? passwordError : ""}
-          secureTextEntry={true}
+          secureTextEntry={showSecureText}
           style={styles.input}
+          accessoryRight={renderInputIcon}
         />
 
         <Button
@@ -105,10 +134,10 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 240,
+    height: 200,
     resizeMode: "contain",
-    marginBottom: 20
+    marginBottom: 12
   },
   title: {
     marginBottom: 20

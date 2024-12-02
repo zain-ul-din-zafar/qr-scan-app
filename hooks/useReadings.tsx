@@ -17,6 +17,7 @@ export interface Reading {
   oilLevel: string;
   oilPressureStatus?: "Low" | "Good";
   newOptionStatus?: "on" | "off" | "isolated";
+  comment?: string;
 }
 
 const ReadingsContext = createContext<{

@@ -276,6 +276,12 @@ export default function ReadingsScreen() {
                               </Button>
                             )}
                           </View>
+
+                          {reading.comment && (
+                            <View style={{ marginTop: 4 }}>
+                              <Text>{reading.comment}</Text>
+                            </View>
+                          )}
                         </View>
                       );
                     })

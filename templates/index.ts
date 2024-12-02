@@ -183,6 +183,7 @@ export const cardTemplate = (
       </label>
     </div>
   </div>
+  ${model.comment ? `<p>${model.comment}</p>` : ""}
    <h1>${machineName}</h1>
   </div>
 `;
