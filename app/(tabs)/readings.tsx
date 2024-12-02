@@ -108,7 +108,7 @@ export default function ReadingsScreen() {
     });
     const html = RENDER(
       readingsCard.join("\n"),
-      `<p>Date: ${selectedDate.toDateString()}</p>
+      `<p>Date Time: ${selectedDate.toUTCString()}</p>
             <p>Group: ${id}</p>`
     );
 

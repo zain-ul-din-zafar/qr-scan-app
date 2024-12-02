@@ -108,6 +108,10 @@ label {
 header {
   padding: 1rem 0rem; 
 }
+
+time {
+  margin-top: 0.7rem;
+}
 `;
 
 export const RENDER = (child: string, header: string = "") => `
@@ -136,6 +140,7 @@ export const cardTemplate = (
   machineName: string
 ) => `
     <div class="card">
+    <time>${new Date(model.created_at).toUTCString()}</time>
     <div class="status-bar">
       <label>
         ${RadioInput(model.newOptionStatus === "on")}
